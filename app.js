@@ -359,6 +359,42 @@ function fileName(title) {
   return ascii.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").toLowerCase() || "music_bingo";
 }
 
+let pdfFile = null;
+
+// Opens the share sheet (save to Files, print, send...) on phones that support sharing files.
+async function sharePdf() {
+  try {
+    await navigator.share({ files: [pdfFile], title: pdfFile.name });
+  } catch (err) {
+    if (err.name !== "AbortError") showMessage(`Couldn't share the PDF: ${err.message}`);
+  }
+}
+
+// In-app browsers (Messenger, Facebook, Instagram...) ignore downloads of generated files,
+// so point people to a real browser instead.
+function setupInAppNotice() {
+  const ua = navigator.userAgent;
+  if (!/FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram/i.test(ua)) return;
+  $("in-app").hidden = false;
+  const url = REDIRECT_URI;
+  if (/Android/i.test(ua)) {
+    const open = $("open-browser");
+    open.href = `intent://${url.replace(/^https?:\/\//, "")}#Intent;scheme=${location.protocol.slice(0, -1)};package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+    open.hidden = false;
+  } else {
+    $("in-app-ios").hidden = false;
+  }
+  $("copy-link").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      prompt("Copy this link:", url);
+      return;
+    }
+    $("copy-link").textContent = "Link copied";
+  });
+}
+
 async function generate(event) {
   event.preventDefault();
   const form = readForm();
@@ -396,6 +432,8 @@ async function generate(event) {
     if (link.href) URL.revokeObjectURL(link.href);
     link.href = URL.createObjectURL(blob);
     link.download = `${fileName(title)}.pdf`;
+    pdfFile = new File([blob], link.download, { type: "application/pdf" });
+    $("share").hidden = !navigator.canShare?.({ files: [pdfFile] });
     $("result-text").textContent = `${plates.length} plates from ${songs.length} songs.`;
     $("result").hidden = false;
     link.click();
@@ -416,6 +454,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     render();
   });
   $("generator").addEventListener("submit", generate);
+  $("share").addEventListener("click", sharePdf);
+  setupInAppNotice();
   try {
     await handleRedirect();
   } catch (err) {

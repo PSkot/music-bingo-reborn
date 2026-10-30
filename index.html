@@ -30,6 +30,10 @@
     .message.error { background: var(--error-bg); color: var(--error); }
     .result { margin-top: 20px; font-size: 14px; color: var(--muted); }
     .result a { color: var(--accent); font-weight: 600; }
+    .result button { margin-top: 12px; }
+    .in-app { background: var(--card); border: 2px solid var(--accent); border-radius: 12px; padding: 16px; margin-bottom: 16px; font-size: 15px; }
+    .in-app p { margin: 0 0 8px; }
+    .in-app .button, .in-app button { margin-top: 8px; }
     code { background: var(--code); padding: 1px 4px; border-radius: 4px; word-break: break-all; }
     [hidden] { display: none !important; }
   </style>
@@ -41,6 +45,13 @@
 <main>
   <h1>Music Bingo</h1>
   <p class="lead">Turn a Spotify playlist into printable bingo plates.</p>
+
+  <div id="in-app" class="in-app" hidden>
+    <p><strong>Open this page in your browser.</strong> The PDF can't be downloaded inside Messenger, Facebook or Instagram.</p>
+    <p id="in-app-ios" hidden>Tap the <strong>…</strong> menu and choose <strong>Open in browser</strong>, or copy the link and paste it into Safari.</p>
+    <a id="open-browser" class="button" hidden>Open in browser</a>
+    <button id="copy-link" type="button">Copy link</button>
+  </div>
 
   <div id="message" class="message" hidden></div>
 
@@ -90,6 +101,7 @@
       <div id="result" class="result" hidden>
         <span id="result-text"></span>
         If the download didn't start, <a id="download">open the PDF</a>.
+        <div><button id="share" type="button" hidden>Share PDF</button></div>
       </div>
     </form>
   </div>
