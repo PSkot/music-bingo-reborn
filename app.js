@@ -124,12 +124,8 @@ function parsePlaylistId(link) {
   return match[1];
 }
 
-// Returns { name, songs: [{ title, artist }] } with duplicates removed.
+// Returns the playlist's songs as [{ title, artist }] with duplicates removed.
 async function fetchPlaylist(token, id) {
-  let name = "";
-  const meta = await apiGet(`${API}/playlists/${id}?fields=name`, token);
-  if (meta.ok) name = (await meta.json()).name || "";
-
   const songs = [];
   const seen = new Set();
   let url = `${API}/playlists/${id}/items?limit=50&additional_types=track`;
@@ -154,7 +150,7 @@ async function fetchPlaylist(token, id) {
     }
     url = page.next;
   }
-  return { name, songs };
+  return songs;
 }
 
 // ---------------------------------------------------------------------------
@@ -355,12 +351,12 @@ function restoreForm() {
   $("song-list").checked = Boolean(saved.songList);
 }
 
-// Browsers can ignore non-ASCII download names, so "Fødselsdag" becomes "Foedselsdag".
+// Lowercase ASCII download names ("Fødselsdag 2026" -> "foedselsdag_2026"); browsers can ignore non-ASCII ones.
 function fileName(title) {
   const ascii = title
     .replace(/[æÆ]/g, "ae").replace(/[øØ]/g, "oe").replace(/[åÅ]/g, "aa").replace(/ß/g, "ss")
     .normalize("NFD").replace(/[̀-ͯ]/g, "");
-  return ascii.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "bingo";
+  return ascii.replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").toLowerCase() || "music_bingo";
 }
 
 async function generate(event) {
@@ -381,7 +377,7 @@ async function generate(event) {
       render();
       throw new SpotifyError("Please log in with Spotify again.");
     }
-    let { name, songs } = await fetchPlaylist(token, parsePlaylistId(form.playlist));
+    let songs = await fetchPlaylist(token, parsePlaylistId(form.playlist));
     if (form.clean) {
       const unique = new Map();
       for (const s of songs) {
@@ -392,7 +388,7 @@ async function generate(event) {
       songs = [...unique.values()];
     }
     const plates = generatePlates(songs, form.count, form.rows, form.cols);
-    const title = form.title || name || "Music Bingo";
+    const title = form.title || "Music Bingo";
     const used = [...new Set(plates.flat())];
     const blob = await buildPdf(plates, title, form.rows, form.cols, form.songList ? used : null);
 

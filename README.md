@@ -35,7 +35,7 @@ because the login needs a real web address.
 
 ## Options
 
-- **Title**: printed above every plate. Defaults to the playlist name.
+- **Title**: printed above every plate. Defaults to "Music Bingo". The PDF is named after it, e.g. `music_bingo.pdf`.
 - **Plates / rows / columns**: plates with more than 4 rows are printed one per page.
 - **Clean up titles**: removes suffixes like `- Remastered 2011` and `(feat. ...)`.
 - **Song checklist**: adds a sorted list of every song used, which the host can tick off as songs play.
